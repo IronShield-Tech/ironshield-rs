@@ -63,12 +63,8 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Generate lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
-
       - name: Cargo test all features
-        run: cargo test --locked --all-features --all-targets
+        run: cargo test --all-features --all-targets
         
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
@@ -95,7 +91,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           # Cache key components - invalidate when dependencies change
-          key: publish-${{ hashFiles('**/Cargo.lock') }}
+          key: publish-${{ hashFiles('**/Cargo.toml') }}
           # Cache compilation artifacts for faster rebuilds
           cache-targets: true
           # Cache downloaded dependencies
@@ -111,11 +107,6 @@ jobs:
           key: ${{ runner.os }}-cargo-tools-toml-cli
           restore-keys: |
             ${{ runner.os }}-cargo-tools-
-
-      # Generate lockfile if it doesn't exist for consistent dependency resolution
-      - name: Generate lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
 
       # Install toml-cli for version manipulation.
       - name: Install toml-cli
@@ -156,11 +147,6 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           
           git add Cargo.toml
-          # Add Cargo.lock if it exists (some libraries don't commit it).
-          if [[ -f "Cargo.lock" ]]; then
-            git add Cargo.lock
-          fi
-          
           git commit -m "chore: bump version to ${{ env.NEW_VERSION }} [skip ci]"
           git push origin main
 
@@ -168,7 +154,7 @@ jobs:
       - name: Build Package
         run: |
           echo "Building package v${{ env.NEW_VERSION }}..."
-          cargo build --release --locked
+          cargo build --release
           echo "Build completed successfully!"
 
       # Create and push a tag 
@@ -181,4 +167,4 @@ jobs:
       - name: Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --locked
+        run: cargo publish
