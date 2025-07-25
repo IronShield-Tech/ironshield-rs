@@ -2,7 +2,7 @@
 name = "ironshield"
 description = "Snagging this name before anyone else does"
 license = "Apache-2.0"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2024"
 authors = ["IronShield Developers <software@ironshield.cloud>"]
 repository = "https://github.com/IronShield-Tech/ironshield-rs"

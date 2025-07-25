@@ -9,6 +9,7 @@ pub mod validate;
 
 // Re-export key types for convenience
 pub use config::ClientConfig;
+pub use constant::USER_AGENT;
 pub use error::CliError;
 pub use request::IronShieldClient;
 pub use solve::{solve_challenge, SolveConfig, ProgressTracker};
