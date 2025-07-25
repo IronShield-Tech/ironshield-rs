@@ -1,6 +1,5 @@
 pub mod config;
 pub mod constant;
-pub mod util;
 pub mod error;
 pub mod http;
 pub mod request;
