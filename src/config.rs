@@ -103,7 +103,7 @@ impl ClientConfig {
 
         if !self.api_base_url.starts_with("https://") {
             return Err(CliError::config_error(
-                ironshield_api::handler::error::INVALID_ENDPOINT
+                crate::api::INVALID_ENDPOINT
             ))
         }
 

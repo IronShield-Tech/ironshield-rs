@@ -5,7 +5,7 @@ use crate::{
     request::IronShieldClient,
     solve,
 };
-use ironshield_api::handler::result::ResultHandler;
+use crate::api::ResultHandler;
 use ironshield_types::IronShieldToken;
 
 /// Fetches a challenge, solves it, and submits the solution for validation.

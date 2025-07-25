@@ -1,9 +1,6 @@
 use reqwest::Client;
 
-use ironshield_api::handler::{
-    error::ErrorHandler,
-    result::ResultHandler
-};
+use crate::api::{ErrorHandler, ResultHandler};
 
 use crate::constant::USER_AGENT;
 

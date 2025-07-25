@@ -2,7 +2,7 @@
 name = "ironshield"
 description = "Snagging this name before anyone else does"
 license = "Apache-2.0"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2024"
 authors = ["IronShield Developers <software@ironshield.cloud>"]
 readme = "README-crates.md"
@@ -15,7 +15,6 @@ default = ["parallel"]
 parallel = ["ironshield-core/parallel"]
 
 [dependencies]
-ironshield-api = { version = "0.1" }
 ironshield-core = { version = "0.3", features = ["parallel"] }
 ironshield-types = { version = "0.2" }
 futures = "0.3.31"

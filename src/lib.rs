@@ -1,3 +1,4 @@
+pub mod api;
 pub mod config;
 pub mod constant;
 pub mod error;
@@ -14,6 +15,9 @@ pub use error::CliError;
 pub use request::IronShieldClient;
 pub use solve::{solve_challenge, SolveConfig, ProgressTracker};
 pub use validate::validate_challenge;
+
+// Re-export api types so dependents don't need direct ironshield-api dependency
+pub use api::{ErrorHandler, INVALID_ENDPOINT, ResultHandler};
 
 // Re-export types from ironshield-types for convenience
 pub use ironshield_types::{

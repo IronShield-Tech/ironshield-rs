@@ -1,9 +1,6 @@
 use reqwest::Client;
 
-use ironshield_api::handler::{
-    error::ErrorHandler,
-    result::ResultHandler
-};
+use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{
     chrono,
     IronShieldChallenge,
@@ -38,7 +35,7 @@ impl IronShieldClient {
     pub fn new(config: ClientConfig) -> ResultHandler<Self> {
         if !config.api_base_url.starts_with("https://") {
             return Err(ErrorHandler::config_error(
-                ironshield_api::handler::error::INVALID_ENDPOINT
+                crate::api::INVALID_ENDPOINT
             ));
         }
 

@@ -1,7 +1,4 @@
-use ironshield_api::handler::{
-    error::ErrorHandler,
-    result::ResultHandler
-};
+use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{
     IronShieldChallenge,
     IronShieldToken

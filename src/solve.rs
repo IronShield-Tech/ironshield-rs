@@ -1,7 +1,7 @@
 use tokio::task::JoinHandle;
 use futures::future;
 
-use ironshield_api::handler::{error::ErrorHandler, result::ResultHandler};
+use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{IronShieldChallenge, IronShieldChallengeResponse};
 use crate::config::ClientConfig;
 
