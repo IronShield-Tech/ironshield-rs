@@ -4,7 +4,6 @@ use futures::future;
 use ironshield_api::handler::{error::ErrorHandler, result::ResultHandler};
 use ironshield_types::{IronShieldChallenge, IronShieldChallengeResponse};
 use crate::config::ClientConfig;
-use crate::display::{ProgressAnimation, format_number_with_commas};
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::time::Instant;
@@ -78,15 +77,7 @@ pub async fn solve_challenge(
     crate::verbose_kv!(config, "Multithreaded", solve_config.use_multithreaded);
     crate::verbose_kv!(config, "Recommended Attempts", challenge.recommended_attempts);
 
-    // Always show challenge difficulty info (both verbose and non-verbose modes)
-    let difficulty: u64 = challenge.recommended_attempts / 2; // recommended_attempts = difficulty * 2
-    println!("Received proof-of-work challenge with difficulty {}", format_number_with_commas(difficulty));
-
     let start_time: Instant = Instant::now();
-    
-    // Start the progress animation (only in non-verbose mode)
-    let animation = ProgressAnimation::new(config.verbose);
-    let animation_handle = animation.start();
 
     // Choose solving strategy based on configuration.
     let result = if solve_config.use_multithreaded && solve_config.thread_count > 1 {
@@ -94,9 +85,6 @@ pub async fn solve_challenge(
     } else {
         solve_single_threaded(challenge, config).await
     };
-
-    // Stop the animation and clean up the line
-    animation.stop(animation_handle).await;
 
     // Log timing and performance metrics.
     match result {
@@ -334,8 +322,6 @@ async fn solve_single_threaded(
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
