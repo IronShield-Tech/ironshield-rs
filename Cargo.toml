@@ -5,6 +5,7 @@ license = "Apache-2.0"
 version = "0.1.6"
 edition = "2024"
 authors = ["IronShield Developers <software@ironshield.cloud>"]
+readme = "README-crates.md"
 repository = "https://github.com/IronShield-Tech/ironshield-rs"
 keywords = ["proof-of-work", "pow", "ddos", "crypto", "library"]
 categories = ["cryptography", "algorithms", "concurrency"]
