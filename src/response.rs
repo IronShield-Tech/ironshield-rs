@@ -40,11 +40,11 @@ impl ApiResponse {
     /// ```
     pub fn from_json(response: Value) -> ResultHandler<Self> {
         let status = response.get("status")
-            .and_then(|s| s.as_u64())
+            .and_then(|s: &Value| s.as_u64())
             .unwrap_or(0) as u16;
 
         let message = response.get("message")
-            .and_then(|m| m.as_str())
+            .and_then(|m: &Value| m.as_str())
             .unwrap_or("No message")
             .to_string();
 
