@@ -29,7 +29,7 @@ pub async fn validate_challenge(
     let challenge = client.fetch_challenge(endpoint).await?;
 
     // Solve the challenge.
-    let solution = solve::solve_challenge(challenge, config, use_multithread).await?;
+    let solution = solve::solve_challenge(challenge, config, use_multithread, None).await?;
 
     // Submit the solution for validation.
     let token = client.submit_solution(&solution).await?;

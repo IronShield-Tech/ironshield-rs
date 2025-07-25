@@ -52,12 +52,18 @@ impl SolveConfig {
     }
 }
 
+/// Trait for progress callbacks during solving
+pub trait ProgressTracker: Send + Sync {
+    fn on_progress(&self, thread_id: usize, total_attempts: u64, hash_rate: u64, elapsed: std::time::Duration);
+}
+
 /// Primary entry point for solving proof-of-work challenges.
 ///
 /// # Arguments
 /// * `challenge`:          The challenge to solve.
 /// * `config`:             Client configuration. `ClientConfig`
 /// * `use_multithreading`: Whether to attempt multithreaded solving.
+/// * `progress_tracker`:   Optional progress tracker for detailed logging
 ///
 /// # Returns
 /// `ResultHandler<IronShieldChallengeResponse>`: A valid solution:
@@ -68,6 +74,7 @@ pub async fn solve_challenge(
     challenge:         IronShieldChallenge,
     config:            &ClientConfig,
     use_multithreaded: bool,
+    progress_tracker:  Option<Arc<dyn ProgressTracker>>,
 ) -> ResultHandler<IronShieldChallengeResponse> {
     let solve_config = SolveConfig::new(config, use_multithreaded);
 
@@ -75,7 +82,7 @@ pub async fn solve_challenge(
 
     // Choose solving strategy based on configuration.
     let result = if solve_config.use_multithreaded && solve_config.thread_count > 1 {
-        solve_multithreaded(challenge, &solve_config, config).await
+        solve_multithreaded(challenge, &solve_config, config, progress_tracker).await
     } else {
         solve_single_threaded(challenge, config).await
     };
@@ -89,6 +96,7 @@ async fn solve_multithreaded(
     challenge: IronShieldChallenge,
     solve_config: &SolveConfig,
     config: &ClientConfig,
+    progress_tracker: Option<Arc<dyn ProgressTracker>>,
 ) -> ResultHandler<IronShieldChallengeResponse> {
     let challenge: Arc<IronShieldChallenge> = Arc::new(challenge);
     let solution_found: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
@@ -101,13 +109,15 @@ async fn solve_multithreaded(
         let        thread_offset: u64 = thread_id as u64;
         let         config_clone: ClientConfig = config.clone();
         let solution_found_clone: Arc<AtomicBool> = Arc::clone(&solution_found);
+        let progress_tracker_clone = progress_tracker.clone();
 
         let handle = tokio::task::spawn_blocking(move || {
             // Create progress callback for status updates.
-            let progress_callback = create_progress_callback(
+            let core_progress_callback = create_progress_callback(
                 thread_id,
                 config_clone.clone(),
-                solution_found_clone
+                solution_found_clone,
+                progress_tracker_clone,
             );
 
             // Call ironshield-core's find_solution_multi_threaded function.
@@ -116,7 +126,7 @@ async fn solve_multithreaded(
                 Some(ironshield_core::PoWConfig::multi_threaded()), // Use optimized multi-threaded config
                 Some(thread_offset as usize),      // start_offset for this thread.
                 Some(thread_stride as usize),      // stride for optimal thread-stride pattern.
-                Some(&progress_callback),          // Progress callback for status updates.
+                Some(&core_progress_callback),     // Progress callback for status updates.
             ).map_err(|e: String| ErrorHandler::ProcessingError(format!(
                 "Thread {} failed: {}", thread_id, e
             )))
@@ -131,9 +141,10 @@ async fn solve_multithreaded(
 
 /// Create a progress callback for a worker thread.
 fn create_progress_callback(
-    _thread_id: usize,
+    thread_id: usize,
     _config: ClientConfig,
     solution_found: Arc<AtomicBool>,
+    progress_tracker: Option<Arc<dyn ProgressTracker>>,
 ) -> impl Fn(u64) {
     let thread_start_time: Instant = Instant::now();
     let cumulative_attempts: Arc<std::sync::atomic::AtomicU64> = Arc::new(std::sync::atomic::AtomicU64::new(0));
@@ -147,7 +158,7 @@ fn create_progress_callback(
         // Accumulate attempts (core callback provides batch size, not cumulative).
         let total_attempts: u64 = cumulative_attempts.fetch_add(batch_attempts, Ordering::Relaxed) + batch_attempts;
 
-        // Progress tracking without verbose logging
+        // Progress tracking
         let _elapsed: Duration = thread_start_time.elapsed();
         let _elapsed_millis: u64 = _elapsed.as_millis() as u64;
 
@@ -158,7 +169,13 @@ fn create_progress_callback(
             total_attempts  // If solved instantly, assume 1ms.
         };
 
-        // Note: Progress logging removed - handle in CLI if needed
+        // Progress information is available here but not currently logged
+        // The CLI wrapper will handle progress display through animations
+
+        // Call the provided progress callback if it exists
+        if let Some(tracker) = &progress_tracker {
+            tracker.on_progress(thread_id, total_attempts, _hash_rate, _elapsed);
+        }
     }
 }
 

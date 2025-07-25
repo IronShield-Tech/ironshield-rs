@@ -11,7 +11,7 @@ pub mod validate;
 pub use config::ClientConfig;
 pub use error::CliError;
 pub use request::IronShieldClient;
-pub use solve::{solve_challenge, SolveConfig};
+pub use solve::{solve_challenge, SolveConfig, ProgressTracker};
 pub use validate::validate_challenge;
 
 // Re-export types from ironshield-types for convenience
