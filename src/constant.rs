@@ -1,0 +1,1 @@
+pub const USER_AGENT: &str = "curl/8.4.0"; 
