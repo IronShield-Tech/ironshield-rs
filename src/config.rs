@@ -43,12 +43,16 @@ impl ClientConfig {
     ///                             error if parsing fails.
     ///
     /// # Examples
-    /// ```
+    /// ```no_run
+    /// use ironshield::ClientConfig;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// // Load from default location.
     /// let config = ClientConfig::from_file("ironshield.toml")?;
     ///
     /// // Load from custom location.
     /// let config = ClientConfig::from_file("/etc/ironshield/config.toml")?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn from_file(path: &str) -> Result<Self, CliError> {
         match std::fs::read_to_string(path) {
@@ -79,9 +83,13 @@ impl ClientConfig {
     /// * `Result<(), CliError>`: Indication of success or failure.
     ///
     /// # Examples
-    /// ```
+    /// ```no_run
+    /// use ironshield::ClientConfig;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let config = ClientConfig::default();
     /// config.save_to_file("ironshield.toml")?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn save_to_file(&self, path: &str) -> Result<(), CliError> {
         self.validate()?;

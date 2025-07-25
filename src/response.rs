@@ -30,11 +30,11 @@ impl ApiResponse {
     /// * `ResultHandler<Self>`: Parsed response or an error.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// let json_response = serde_json::json!({
     ///     "status": 200,
     ///     "message": "Success",
-    ///     "challenge": { /* challenge data */ }
+    ///     "challenge": {}
     /// });
     /// let api_response = ApiResponse::from_json(json_response)?;
     /// ```

@@ -28,9 +28,13 @@ impl IronShieldClient {
     /// * `ResultHandler<Self>`: The initialized client or an error.
     ///
     /// # Example
-    /// ```
+    /// ```no_run
+    /// use ironshield::{ClientConfig, IronShieldClient};
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let config = ClientConfig::from_file("ironshield.toml")?;
     /// let client = IronShieldClient::new(config)?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn new(config: ClientConfig) -> ResultHandler<Self> {
         if !config.api_base_url.starts_with("https://") {
@@ -58,9 +62,15 @@ impl IronShieldClient {
     /// * `ResultHandler<IronShieldChallenge>`: The challenge to solve.
     ///
     /// # Examples
-    /// ```
+    /// ```no_run
+    /// use ironshield::{ClientConfig, IronShieldClient};
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let config = ClientConfig::default();
+    /// # let client = IronShieldClient::new(config)?;
     /// let challenge = client.fetch_challenge("https://example.com/protected").await?;
     /// println!("Challenge difficulty: {}", challenge.recommended_attempts);
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn fetch_challenge(
         &self,
