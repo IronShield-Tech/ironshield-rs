@@ -91,15 +91,6 @@ jobs:
       # Cache Rust dependencies and compilation artifacts
       - name: Cache Rust Dependencies
         uses: Swatinem/rust-cache@v2
-        with:
-          # Cache key components - invalidate when dependencies change
-          key: publish-${{ hashFiles('**/Cargo.toml') }}
-          # Cache compilation artifacts for faster rebuilds
-          cache-targets: true
-          # Cache downloaded dependencies
-          cache-all-crates: true
-          # Save/restore cargo registry and git dependencies
-          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # Cache cargo tools separately since they don't change often
       - name: Cache Cargo Tools
