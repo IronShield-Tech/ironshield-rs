@@ -1,8 +1,10 @@
-use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{
     IronShieldChallenge,
     IronShieldToken
 };
+
+use crate::error::ErrorHandler;
+use crate::result::ResultHandler;
 
 use serde_json::Value;
 

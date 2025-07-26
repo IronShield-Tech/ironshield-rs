@@ -5,8 +5,8 @@ use crate::{
     request::IronShieldClient,
     solve,
 };
-use crate::api::ResultHandler;
 use ironshield_types::IronShieldToken;
+use crate::result::ResultHandler;
 
 /// Fetches a challenge, solves it, and submits the solution for validation.
 ///
@@ -29,10 +29,10 @@ pub async fn validate_challenge(
     let challenge = client.fetch_challenge(endpoint).await?;
 
     // Solve the challenge.
-    let solution = solve::solve_challenge(challenge, config, use_multithread, None).await?;
+    let  solution = solve::solve_challenge(challenge, config, use_multithread, None).await?;
 
     // Submit the solution for validation.
-    let token = client.submit_solution(&solution).await?;
+    let     token = client.submit_solution(&solution).await?;
 
     Ok(token)
 } 

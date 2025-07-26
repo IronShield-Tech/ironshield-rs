@@ -1,6 +1,3 @@
-use reqwest::Client;
-
-use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{
     chrono,
     IronShieldChallenge,
@@ -10,8 +7,12 @@ use ironshield_types::{
 };
 
 use crate::config::ClientConfig;
+use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 use crate::http::HttpClientBuilder;
 use crate::response::ApiResponse;
+use crate::result::ResultHandler;
+
+use reqwest::Client;
 
 pub struct IronShieldClient {
     config:      ClientConfig,
@@ -39,7 +40,7 @@ impl IronShieldClient {
     pub fn new(config: ClientConfig) -> ResultHandler<Self> {
         if !config.api_base_url.starts_with("https://") {
             return Err(ErrorHandler::config_error(
-                crate::api::INVALID_ENDPOINT
+                INVALID_ENDPOINT
             ));
         }
 
@@ -132,4 +133,4 @@ impl IronShieldClient {
 
         Ok(json_response)
     }
-} 
+}

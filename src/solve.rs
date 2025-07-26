@@ -1,13 +1,14 @@
 use tokio::task::JoinHandle;
 use futures::future;
 
-use crate::api::{ErrorHandler, ResultHandler};
 use ironshield_types::{IronShieldChallenge, IronShieldChallengeResponse};
 use crate::config::ClientConfig;
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::time::Instant;
 use tokio::time::Duration;
+use crate::error::ErrorHandler;
+use crate::result::ResultHandler;
 
 /// Configuration for proof-of-work challenge
 /// solving.
@@ -80,7 +81,7 @@ pub async fn solve_challenge(
 
     let _start_time: Instant = Instant::now();
 
-    // Choose solving strategy based on configuration.
+    // Choose a solving strategy based on configuration.
     let result = if solve_config.use_multithreaded && solve_config.thread_count > 1 {
         solve_multithreaded(challenge, &solve_config, config, progress_tracker).await
     } else {
@@ -91,7 +92,7 @@ pub async fn solve_challenge(
     result
 }
 
-/// Solve using multiple threads with early termination when solution is found.
+/// Solve using multiple threads with early termination when a solution is found.
 async fn solve_multithreaded(
     challenge: IronShieldChallenge,
     solve_config: &SolveConfig,
@@ -123,10 +124,10 @@ async fn solve_multithreaded(
             // Call ironshield-core's find_solution_multi_threaded function.
             ironshield_core::find_solution_multi_threaded(
                 &*challenge_clone,
-                Some(ironshield_core::PoWConfig::multi_threaded()), // Use optimized multi-threaded config
-                Some(thread_offset as usize),      // start_offset for this thread.
-                Some(thread_stride as usize),      // stride for optimal thread-stride pattern.
-                Some(&core_progress_callback),     // Progress callback for status updates.
+                Some(ironshield_core::PoWConfig::multi_threaded()), // Use optimized multithreaded config
+                Some(thread_offset as usize),                       // start_offset for this thread.
+                Some(thread_stride as usize),                       // stride for optimal thread-stride pattern.
+                Some(&core_progress_callback),                      // Progress callback for status updates.
             ).map_err(|e: String| ErrorHandler::ProcessingError(format!(
                 "Thread {} failed: {}", thread_id, e
             )))
@@ -150,7 +151,7 @@ fn create_progress_callback(
     let cumulative_attempts: Arc<std::sync::atomic::AtomicU64> = Arc::new(std::sync::atomic::AtomicU64::new(0));
 
     move |batch_attempts: u64| {
-        // Stop reporting progress if solution already found by another thread.
+        // Stop reporting progress if a solution already found by another thread.
         if solution_found.load(Ordering::Relaxed) {
             return;
         }

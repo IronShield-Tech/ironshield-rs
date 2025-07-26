@@ -1,8 +1,9 @@
-use reqwest::Client;
-
-use crate::api::{ErrorHandler, ResultHandler};
-
 use crate::constant::USER_AGENT;
+
+use crate::error::ErrorHandler;
+use crate::result::ResultHandler;
+
+use reqwest::Client;
 
 use std::time::Duration;
 

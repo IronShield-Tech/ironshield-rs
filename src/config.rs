@@ -3,7 +3,7 @@ use serde::{
     Serialize
 };
 
-use crate::error::CliError;
+use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 
 use std::time::Duration;
 
@@ -38,9 +38,9 @@ impl ClientConfig {
     /// * `path`: The path to the TOML configuration file.
     ///
     /// # Returns
-    /// * `Result<Self, CliError>`: containing the loaded
-    ///                             configuration, or an
-    ///                             error if parsing fails.
+    /// * `Result<Self, ErrorHandler>`: containing the loaded
+    ///                                 configuration, or an
+    ///                                 error if parsing fails.
     ///
     /// # Examples
     /// ```no_run
@@ -54,7 +54,7 @@ impl ClientConfig {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn from_file(path: &str) -> Result<Self, CliError> {
+    pub fn from_file(path: &str) -> Result<Self, ErrorHandler> {
         match std::fs::read_to_string(path) {
             Ok(content) => {
                 let config: Self = toml::from_str(&content)?;
@@ -63,12 +63,12 @@ impl ClientConfig {
 
                 Ok(config)
             }
-            Err(err) => { // File doesn't exist, use default configuration.
+            Err(err) => { // File doesn't exist, use the default configuration.
                 if err.kind() == std::io::ErrorKind::NotFound {
                     eprintln!("Config file '{}' not found, using default configuration.", path);
                     Ok(Self::default())
                 } else {
-                    Err(CliError::Io(err))
+                    Err(ErrorHandler::Io(err))
                 }
             }
         }
@@ -80,7 +80,8 @@ impl ClientConfig {
     /// * `path`: Path to the configuration file save location.
     ///
     /// # Returns
-    /// * `Result<(), CliError>`: Indication of success or failure.
+    /// * `Result<(), ErrorHandler
+    /// >`: Indication of success or failure.
     ///
     /// # Examples
     /// ```no_run
@@ -91,11 +92,11 @@ impl ClientConfig {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn save_to_file(&self, path: &str) -> Result<(), CliError> {
+    pub fn save_to_file(&self, path: &str) -> Result<(), ErrorHandler> {
         self.validate()?;
 
         let content = toml::to_string_pretty(self)
-            .map_err(|e| CliError::config_error(format!("Failed to serialize config: {}", e)))?;
+            .map_err(|e| ErrorHandler::config_error(format!("Failed to serialize config: {}", e)))?;
 
         std::fs::write(path, content)?;
 
@@ -105,25 +106,30 @@ impl ClientConfig {
     /// Validates the configuration.
     ///
     /// # Returns
-    /// * `Result<(), CliError>`: Indication of success or failure.
-    fn validate(&self) -> Result<(), CliError> {
+    /// * `Result<(), ErrorHandler
+    /// >`: Indication of success or failure.
+    fn validate(&self) -> Result<(), ErrorHandler
+    > {
         let timeout_secs = self.timeout.as_secs();
 
         if !self.api_base_url.starts_with("https://") {
-            return Err(CliError::config_error(
-                crate::api::INVALID_ENDPOINT
+            return Err(ErrorHandler
+            ::config_error(
+                INVALID_ENDPOINT
             ))
         }
 
         if timeout_secs < 1 || timeout_secs > 600 {
-            return Err(CliError::config_error(
+            return Err(ErrorHandler
+            ::config_error(
                 "Timeout must be between 1 seconds and 10 minutes."
             ))
         }
 
         if let Some(threads) = self.num_threads {
             if threads == 0 {
-                return Err(CliError::config_error(
+                return Err(ErrorHandler
+                ::config_error(
                     "Thread count must be greater than 0."
                 ))
             }
@@ -265,4 +271,4 @@ mod tests {
         let default_config = ClientConfig::default();
         assert_eq!(config.api_base_url, default_config.api_base_url);
     }
-} 
+}
