@@ -3,6 +3,8 @@ use serde::{
     Serialize
 };
 
+#[allow(unused_imports)]
+use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 use crate::USER_AGENT;
 
 use std::time::Duration;
