@@ -3,7 +3,7 @@ use serde::{
     Serialize
 };
 
-use crate::error::ErrorHandler;
+use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 use crate::USER_AGENT;
 
 use std::time::Duration;
@@ -55,7 +55,7 @@ impl ClientConfig {
 
     /// Creates a testing configuration for use with a locally run API.
     /// Made for port 3000.
-    /// 
+    ///
     /// # Returns
     /// `Self`: A `ClientConfig` instance optimized for testing scenarios.
     ///
@@ -64,7 +64,7 @@ impl ClientConfig {
     /// use ironshield::ClientConfig;
     ///
     /// let test_config = ClientConfig::testing();
-    /// assert_eq!(test_config.api_base_url, "http://localhost:8080");
+    /// assert_eq!(test_config.api_base_url, "http://localhost:3000");
     /// ```
     pub fn testing() -> Self {
         Self {
@@ -101,19 +101,19 @@ impl ClientConfig {
                 "API base URL cannot be empty".to_string()
             ));
         }
-        
-        if !self.api_base_url.starts_with("http://") && !self.api_base_url.starts_with("https://") {
+
+        if !self.api_base_url.starts_with("https://") {
             return Err(ErrorHandler::config_error(
-                "API base URL must start with http:// or https://".to_string()
+                INVALID_ENDPOINT
             ));
         }
-        
+
         if self.timeout.is_zero() {
             return Err(ErrorHandler::config_error(
                 "Timeout must be greater than zero".to_string()
             ));
         }
-        
+
         if let Some(threads) = self.num_threads {
             if threads == 0 {
                 return Err(ErrorHandler::config_error(
@@ -121,7 +121,7 @@ impl ClientConfig {
                 ));
             }
         }
-        
+
         if self.user_agent.is_empty() {
             return Err(ErrorHandler::config_error(
                 "User agent cannot be empty".to_string()
@@ -130,7 +130,7 @@ impl ClientConfig {
 
         Ok(())
     }
-    
+
     /// # Arguments
     /// * `url`: The new API base URL.
     ///
@@ -161,12 +161,12 @@ impl ClientConfig {
         self.api_base_url = url.to_string();
         Ok(self)
     }
-    
+
     /// # Arguments
     /// * `timeout`: The new timeout duration.
     ///
     /// # Returns
-    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for method 
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for method
     ///                                      chaining or error.
     ///
     /// # Example
@@ -192,11 +192,11 @@ impl ClientConfig {
     /// Sets the number of threads after validation.
     ///
     /// # Arguments
-    /// * `threads`: The number of threads to use, or None for 
+    /// * `threads`: The number of threads to use, or None for
     ///              auto-detection.
     ///
     /// # Returns
-    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for 
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for
     ///                                      method chaining or error.
     ///
     /// # Example
@@ -219,7 +219,7 @@ impl ClientConfig {
         self.num_threads = threads;
         Ok(self)
     }
-    
+
     /// # Arguments
     /// * `verbose`: Whether to enable verbose logging.
     ///
@@ -238,7 +238,7 @@ impl ClientConfig {
         self.verbose = verbose;
         self
     }
-    
+
     /// # Arguments
     /// * `user_agent`: The new user agent string.
     ///

@@ -31,10 +31,11 @@ impl IronShieldClient {
     /// # Example
     /// ```no_run
     /// use ironshield::{ClientConfig, IronShieldClient};
+    /// 
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = ClientConfig::from_file("ironshield.toml")?;
-    /// let client = IronShieldClient::new(config)?;
-    /// # Ok(())
+    ///     let config = ClientConfig::testing();
+    ///     let client = IronShieldClient::new(config)?;
+    /// #   Ok(())
     /// # }
     /// ```
     pub fn new(config: ClientConfig) -> ResultHandler<Self> {
