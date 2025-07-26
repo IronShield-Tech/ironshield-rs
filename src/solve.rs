@@ -35,10 +35,10 @@ impl SolveConfig {
     /// # Returns
     /// * `Self`: A new instance of the solving config.
     pub fn new(config: &ClientConfig, use_multithreaded: bool) -> Self {
-        let available_cores = num_cpus::get();
+        let available_cores: usize = num_cpus::get();
 
         // Use 80% of available cores, minimum 1, respect config override.
-        let thread_count = if use_multithreaded {
+        let thread_count: usize = if use_multithreaded {
             config.num_threads
                 .unwrap_or_else(|| std::cmp::max(1, (available_cores * 4) / 5))
         } else {
@@ -76,7 +76,7 @@ pub async fn solve_challenge(
     use_multithreaded: bool,
     progress_tracker:  Option<Arc<dyn ProgressTracker>>,
 ) -> ResultHandler<IronShieldChallengeResponse> {
-    let solve_config = SolveConfig::new(config, use_multithreaded);
+    let solve_config: SolveConfig = SolveConfig::new(config, use_multithreaded);
 
     let _start_time: Instant = Instant::now();
 
