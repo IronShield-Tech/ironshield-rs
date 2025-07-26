@@ -2,7 +2,7 @@
 name = "ironshield"
 description = "Snagging this name before anyone else does"
 license = "Apache-2.0"
-version = "0.2.11"
+version = "0.2.12"
 edition = "2024"
 authors = ["IronShield Developers <software@ironshield.cloud>"]
 readme = "README-crates.md"
