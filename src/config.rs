@@ -46,10 +46,10 @@ impl ClientConfig {
     pub fn development() -> Self {
         Self {
             api_base_url: "https://dev-api.ironshield.cloud".to_string(),
-            num_threads: Some(1), // Single-threaded for easier debugging.
-            timeout: Duration::from_secs(60), // Longer timeout for development.
-            user_agent: format!("{}-dev", USER_AGENT),
-            verbose: true,
+            num_threads:  Some(1),
+            timeout:      Duration::from_secs(60),
+            user_agent:   format!("{}-dev", USER_AGENT),
+            verbose:      true,
         }
     }
 
@@ -69,10 +69,10 @@ impl ClientConfig {
     pub fn testing() -> Self {
         Self {
             api_base_url: "http://localhost:3000".to_string(),
-            num_threads: Some(1),
-            timeout: Duration::from_secs(5),
-            user_agent: format!("{}-test", USER_AGENT),
-            verbose: false,
+            num_threads:  Some(1),
+            timeout:      Duration::from_secs(5),
+            user_agent:   format!("{}-test", USER_AGENT),
+            verbose:      false,
         }
     }
 
@@ -95,6 +95,7 @@ impl ClientConfig {
     /// let config = ClientConfig::default();
     /// assert!(config.validate().is_ok());
     /// ```
+    #[cfg(feature = "toml")]
     pub fn validate(&self) -> Result<(), ErrorHandler> {
         if self.api_base_url.is_empty() {
             return Err(ErrorHandler::config_error(
@@ -131,6 +132,85 @@ impl ClientConfig {
         Ok(())
     }
 
+    /// Loads a configuration file from a TOML file,
+    /// falling back to defaults if it is not present.
+    ///
+    /// # Arguments
+    /// * `path`: The path to the TOML configuration file.
+    ///
+    /// # Returns
+    /// * `Result<Self, CliError>`: containing the loaded
+    ///                             configuration, or an
+    ///                             error if parsing fails.
+    ///
+    /// # Examples
+    /// ```
+    /// // Load from the default location.
+    /// use ironshield::ClientConfig;
+    /// 
+    /// let config = ClientConfig::from_file("ironshield.toml")?;
+    ///
+    /// // Load from a custom location.
+    /// let config = ClientConfig::from_file("/etc/ironshield/config.toml")?;
+    /// ```
+    #[cfg(feature = "toml")]
+    pub fn from_file(path: &str) -> Result<ClientConfig, ErrorHandler> {
+        match std::fs::read_to_string(path) {
+            Ok(content) => {
+                let config: ClientConfig = toml::from_str(&content)
+                    .map_err(|e| ErrorHandler::config_error(
+                        format!("Failed to parse TOML config file '{}': {}", path, e)
+                    ))?;
+
+                config.validate()
+                      .map_err(|e| ErrorHandler::config_error(
+                          format!("Configuration validation failed: {}", e)
+                      ))?;
+
+                Ok(config)
+            }
+            Err(err) => {
+                if err.kind() == std::io::ErrorKind::NotFound {
+                    eprintln!("Config file '{}' not found, using default configuration.", path);
+                    Ok(ClientConfig::default())
+                } else {
+                    Err(ErrorHandler::Io(err))
+                }
+            }
+        }
+    }
+
+    /// Saves the current configuration to a TOML file.
+    ///
+    /// # Arguments
+    /// * `path`: Path to the configuration file save location.
+    ///
+    /// # Returns
+    /// * `Result<(), ErrorHandler>`: Success indication or error.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let config = ClientConfig::default();
+    /// config.save_to_file("ironshield.toml")?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    #[cfg(feature = "toml")]
+    pub fn save_to_file(&self, path: &str) -> Result<(), ErrorHandler> {
+        self.validate()?;
+        
+        let content = toml::to_string_pretty(self)
+            .map_err(|e| ErrorHandler::config_error(
+                format!("Failed to serialize config to TOML: {}", e)
+            ))?;
+        
+        std::fs::write(path, content)
+            .map_err(|e| ErrorHandler::Io(e))?;
+
+        Ok(())
+    }
+
     /// # Arguments
     /// * `url`: The new API base URL.
     ///
@@ -145,6 +225,7 @@ impl ClientConfig {
     /// config.set_api_base_url("https://custom-api.example.com")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    #[cfg(feature = "toml")]
     pub fn set_api_base_url(&mut self, url: &str) -> Result<&mut Self, ErrorHandler> {
         if url.is_empty() {
             return Err(ErrorHandler::config_error(
@@ -178,6 +259,7 @@ impl ClientConfig {
     /// config.set_timeout(Duration::from_secs(45))?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    #[cfg(feature = "toml")]
     pub fn set_timeout(&mut self, timeout: Duration) -> Result<&mut Self, ErrorHandler> {
         if timeout.is_zero() {
             return Err(ErrorHandler::config_error(
@@ -207,6 +289,7 @@ impl ClientConfig {
     /// config.set_num_threads(Some(4))?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    #[cfg(feature = "toml")]
     pub fn set_num_threads(&mut self, threads: Option<usize>) -> Result<&mut Self, ErrorHandler> {
         if let Some(thread_count) = threads {
             if thread_count == 0 {
@@ -253,6 +336,7 @@ impl ClientConfig {
     /// config.set_user_agent("whateva/1.0")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    #[cfg(feature = "toml")]
     pub fn set_user_agent(&mut self, user_agent: &str) -> Result<&mut Self, ErrorHandler> {
         if user_agent.is_empty() {
             return Err(ErrorHandler::config_error(
