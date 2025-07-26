@@ -1,6 +1,14 @@
 //! # Error Handling enum and constants.
 //! Copied from ironshield-api to avoid dependency
 
+use axum::{
+    Json,
+    http::StatusCode,
+    response::{
+        IntoResponse,
+        Response
+    },
+};
 use thiserror::Error;
 use std::time::Duration;
 
@@ -83,6 +91,39 @@ pub enum ErrorHandler {
     #[error("Permission denied: {0}")]
     #[allow(dead_code)]
     PermissionError(String),
+}
+
+/// Converts `ErrorHandler` into an `axum::response::Response`.
+/// 
+/// This implementation allows `ErrorHandler` to be used
+/// as a response type in Axum handlers in ironshield-api.
+impl IntoResponse for ErrorHandler {
+    fn into_response(self) -> Response {
+        let (status, error_message) = match self {
+            ErrorHandler::InvalidRequest(message) => {
+                (StatusCode::BAD_REQUEST, message)
+            },
+            ErrorHandler::ProcessingError(message) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, message)
+            },
+            ErrorHandler::SerializationError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Data processing error".to_string())
+            },
+            ErrorHandler::InternalError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string())
+            }
+            _ => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Unknown Error".to_string())
+            }
+        };
+
+        let body: Json<serde_json::Value> = Json(serde_json::json!({
+            "error": error_message,
+            "success": false,
+        }));
+
+        (status, body).into_response()
+    }
 }
 
 impl ErrorHandler {
