@@ -3,7 +3,6 @@ use serde::{
     Serialize
 };
 
-use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 use crate::USER_AGENT;
 
 use std::time::Duration;
@@ -415,15 +414,18 @@ mod duration_serde {
 
 #[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]
+    #[cfg(feature = "toml")]
     fn test_default_config_is_valid() {
         let config = ClientConfig::default();
         assert!(config.validate().is_ok());
     }
 
     #[test]
+    #[cfg(feature = "toml")]
     fn test_config_validation_invalid_url() {
         let mut config = ClientConfig::default();
         config.api_base_url = "http://insecure.example.com".to_string();
@@ -431,6 +433,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "toml")]
     fn test_config_validation_invalid_timeout() {
         let mut config = ClientConfig::default();
         config.timeout = Duration::from_secs(0);
@@ -438,6 +441,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "toml")]
     fn test_config_validation_invalid_threads() {
         let mut config = ClientConfig::default();
         config.num_threads = Some(0);
