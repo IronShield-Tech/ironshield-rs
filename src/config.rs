@@ -3,7 +3,8 @@ use serde::{
     Serialize
 };
 
-use crate::error::{ErrorHandler, INVALID_ENDPOINT};
+use crate::error::ErrorHandler;
+use crate::USER_AGENT;
 
 use std::time::Duration;
 
@@ -23,129 +24,244 @@ impl Default for ClientConfig {
             api_base_url: "https://api.ironshield.cloud".to_string(),
             num_threads:  None,
             timeout:      Duration::from_secs(30),
-            user_agent:   crate::constant::USER_AGENT.to_string(),
+            user_agent:   USER_AGENT.to_string(),
             verbose:      false,
         }
     }
 }
 
-#[allow(dead_code)]
 impl ClientConfig {
-    /// Loads a configuration file from a TOML file,
-    /// falling back to defaults if it is not present.
-    ///
-    /// # Arguments
-    /// * `path`: The path to the TOML configuration file.
+    /// Creates a development configuration.
     ///
     /// # Returns
-    /// * `Result<Self, ErrorHandler>`: containing the loaded
-    ///                                 configuration, or an
-    ///                                 error if parsing fails.
+    /// `Self`: A `ClientConfig` instance optimized for development use.
     ///
-    /// # Examples
-    /// ```no_run
-    /// use ironshield::ClientConfig;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// // Load from default location.
-    /// let config = ClientConfig::from_file("ironshield.toml")?;
-    ///
-    /// // Load from custom location.
-    /// let config = ClientConfig::from_file("/etc/ironshield/config.toml")?;
-    /// # Ok(())
-    /// # }
+    /// # Example
     /// ```
-    pub fn from_file(path: &str) -> Result<Self, ErrorHandler> {
-        match std::fs::read_to_string(path) {
-            Ok(content) => {
-                let config: Self = toml::from_str(&content)?;
-
-                config.validate()?;
-
-                Ok(config)
-            }
-            Err(err) => { // File doesn't exist, use the default configuration.
-                if err.kind() == std::io::ErrorKind::NotFound {
-                    eprintln!("Config file '{}' not found, using default configuration.", path);
-                    Ok(Self::default())
-                } else {
-                    Err(ErrorHandler::Io(err))
-                }
-            }
-        }
-    }
-
-    /// Saves the current configuration to a TOML file.
-    ///
-    /// # Arguments
-    /// * `path`: Path to the configuration file save location.
-    ///
-    /// # Returns
-    /// * `Result<(), ErrorHandler
-    /// >`: Indication of success or failure.
-    ///
-    /// # Examples
-    /// ```no_run
     /// use ironshield::ClientConfig;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = ClientConfig::default();
-    /// config.save_to_file("ironshield.toml")?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn save_to_file(&self, path: &str) -> Result<(), ErrorHandler> {
-        self.validate()?;
-
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| ErrorHandler::config_error(format!("Failed to serialize config: {}", e)))?;
-
-        std::fs::write(path, content)?;
-
-        Ok(())
-    }
-
-    /// Validates the configuration.
     ///
-    /// # Returns
-    /// * `Result<(), ErrorHandler
-    /// >`: Indication of success or failure.
-    fn validate(&self) -> Result<(), ErrorHandler
-    > {
-        let timeout_secs = self.timeout.as_secs();
-
-        if !self.api_base_url.starts_with("https://") {
-            return Err(ErrorHandler
-            ::config_error(
-                INVALID_ENDPOINT
-            ))
-        }
-
-        if timeout_secs < 1 || timeout_secs > 600 {
-            return Err(ErrorHandler
-            ::config_error(
-                "Timeout must be between 1 seconds and 10 minutes."
-            ))
-        }
-
-        if let Some(threads) = self.num_threads {
-            if threads == 0 {
-                return Err(ErrorHandler
-                ::config_error(
-                    "Thread count must be greater than 0."
-                ))
-            }
-        }
-
-        Ok(())
-    }
-
+    /// let dev_config = ClientConfig::development();
+    /// assert!(dev_config.verbose);
+    /// ```
     pub fn development() -> Self {
         Self {
-            api_base_url: "https://localhost:3000".to_string(),
-            num_threads:  Some(2), // Use limited threading for development.
-            timeout:      Duration::from_secs(10),
-            user_agent:   crate::constant::USER_AGENT.to_string(),
-            verbose:      true,
+            api_base_url: "https://dev-api.ironshield.cloud".to_string(),
+            num_threads: Some(1), // Single-threaded for easier debugging.
+            timeout: Duration::from_secs(60), // Longer timeout for development.
+            user_agent: format!("{}-dev", USER_AGENT),
+            verbose: true,
         }
+    }
+
+    /// Creates a testing configuration for use with a locally run API.
+    /// Made for port 3000.
+    /// 
+    /// # Returns
+    /// `Self`: A `ClientConfig` instance optimized for testing scenarios.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let test_config = ClientConfig::testing();
+    /// assert_eq!(test_config.api_base_url, "http://localhost:8080");
+    /// ```
+    pub fn testing() -> Self {
+        Self {
+            api_base_url: "http://localhost:3000".to_string(),
+            num_threads: Some(1),
+            timeout: Duration::from_secs(5),
+            user_agent: format!("{}-test", USER_AGENT),
+            verbose: false,
+        }
+    }
+
+    /// Validates the current configuration, ensuring all values are within acceptable ranges.
+    ///
+    /// # Returns
+    /// * `Result<(), ErrorHandler>`: Success indication or validation error.
+    ///
+    /// # Errors
+    /// Returns an error if:
+    /// - The API base URL is empty or invalid
+    /// - The timeout is zero or negative
+    /// - The number of threads is zero
+    /// - The user agent string is empty
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let config = ClientConfig::default();
+    /// assert!(config.validate().is_ok());
+    /// ```
+    pub fn validate(&self) -> Result<(), ErrorHandler> {
+        if self.api_base_url.is_empty() {
+            return Err(ErrorHandler::config_error(
+                "API base URL cannot be empty".to_string()
+            ));
+        }
+        
+        if !self.api_base_url.starts_with("http://") && !self.api_base_url.starts_with("https://") {
+            return Err(ErrorHandler::config_error(
+                "API base URL must start with http:// or https://".to_string()
+            ));
+        }
+        
+        if self.timeout.is_zero() {
+            return Err(ErrorHandler::config_error(
+                "Timeout must be greater than zero".to_string()
+            ));
+        }
+        
+        if let Some(threads) = self.num_threads {
+            if threads == 0 {
+                return Err(ErrorHandler::config_error(
+                    "Number of threads must be greater than zero".to_string()
+                ));
+            }
+        }
+        
+        if self.user_agent.is_empty() {
+            return Err(ErrorHandler::config_error(
+                "User agent cannot be empty".to_string()
+            ));
+        }
+
+        Ok(())
+    }
+    
+    /// # Arguments
+    /// * `url`: The new API base URL.
+    ///
+    /// # Returns
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for method chaining or error.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let mut config = ClientConfig::default();
+    /// config.set_api_base_url("https://custom-api.example.com")?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn set_api_base_url(&mut self, url: &str) -> Result<&mut Self, ErrorHandler> {
+        if url.is_empty() {
+            return Err(ErrorHandler::config_error(
+                "API base URL cannot be empty".to_string()
+            ));
+        }
+
+        if !url.starts_with("http://") && !url.starts_with("https://") {
+            return Err(ErrorHandler::config_error(
+                "API base URL must start with http:// or https://".to_string()
+            ));
+        }
+
+        self.api_base_url = url.to_string();
+        Ok(self)
+    }
+    
+    /// # Arguments
+    /// * `timeout`: The new timeout duration.
+    ///
+    /// # Returns
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for method 
+    ///                                      chaining or error.
+    ///
+    /// # Example
+    /// ```
+    /// use std::time::Duration;
+    /// use ironshield::ClientConfig;
+    ///
+    /// let mut config = ClientConfig::default();
+    /// config.set_timeout(Duration::from_secs(45))?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn set_timeout(&mut self, timeout: Duration) -> Result<&mut Self, ErrorHandler> {
+        if timeout.is_zero() {
+            return Err(ErrorHandler::config_error(
+                "Timeout must be greater than zero".to_string()
+            ));
+        }
+
+        self.timeout = timeout;
+        Ok(self)
+    }
+
+    /// Sets the number of threads after validation.
+    ///
+    /// # Arguments
+    /// * `threads`: The number of threads to use, or None for 
+    ///              auto-detection.
+    ///
+    /// # Returns
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for 
+    ///                                      method chaining or error.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let mut config = ClientConfig::default();
+    /// config.set_num_threads(Some(4))?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn set_num_threads(&mut self, threads: Option<usize>) -> Result<&mut Self, ErrorHandler> {
+        if let Some(thread_count) = threads {
+            if thread_count == 0 {
+                return Err(ErrorHandler::config_error(
+                    "Number of threads must be greater than zero".to_string()
+                ));
+            }
+        }
+
+        self.num_threads = threads;
+        Ok(self)
+    }
+    
+    /// # Arguments
+    /// * `verbose`: Whether to enable verbose logging.
+    ///
+    /// # Returns
+    /// * `&mut Self`: Mutable reference for method chaining.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let mut config = ClientConfig::default();
+    /// config.set_verbose(true);
+    /// assert!(config.verbose);
+    /// ```
+    pub fn set_verbose(&mut self, verbose: bool) -> &mut Self {
+        self.verbose = verbose;
+        self
+    }
+    
+    /// # Arguments
+    /// * `user_agent`: The new user agent string.
+    ///
+    /// # Returns
+    /// * `Result<&mut Self, ErrorHandler>`: Mutable reference for method chaining or error.
+    ///
+    /// # Example
+    /// ```
+    /// use ironshield::ClientConfig;
+    ///
+    /// let mut config = ClientConfig::default();
+    /// config.set_user_agent("whateva/1.0")?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn set_user_agent(&mut self, user_agent: &str) -> Result<&mut Self, ErrorHandler> {
+        if user_agent.is_empty() {
+            return Err(ErrorHandler::config_error(
+                "User agent cannot be empty".to_string()
+            ));
+        }
+
+        self.user_agent = user_agent.to_string();
+        Ok(self)
     }
 }
 
@@ -216,7 +332,6 @@ mod duration_serde {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
 
     #[test]
     fn test_default_config_is_valid() {
@@ -243,32 +358,5 @@ mod tests {
         let mut config = ClientConfig::default();
         config.num_threads = Some(0);
         assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_config_roundtrip() {
-        let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test_config.toml");
-        let file_path_str = file_path.to_str().unwrap();
-
-        let original_config = ClientConfig::development();
-        original_config.save_to_file(file_path_str).unwrap();
-
-        let loaded_config = ClientConfig::from_file(file_path_str).unwrap();
-
-        assert_eq!(original_config.api_base_url, loaded_config.api_base_url);
-        assert_eq!(original_config.timeout, loaded_config.timeout);
-        assert_eq!(original_config.verbose, loaded_config.verbose);
-        assert_eq!(original_config.num_threads, loaded_config.num_threads);
-    }
-
-    #[test]
-    fn test_config_missing_file_uses_default() {
-        let result = ClientConfig::from_file("nonexistent_file.toml");
-        assert!(result.is_ok());
-
-        let config = result.unwrap();
-        let default_config = ClientConfig::default();
-        assert_eq!(config.api_base_url, default_config.api_base_url);
     }
 }

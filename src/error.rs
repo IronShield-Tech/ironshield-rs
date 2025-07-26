@@ -10,6 +10,7 @@ use axum::{
     },
 };
 use thiserror::Error;
+
 use std::time::Duration;
 
 pub const  MAX_TIME_DIFF_MS:  i64 = 3 * 10000; // 3 * 10,000 milliseconds = 30 seconds
@@ -63,7 +64,8 @@ pub enum ErrorHandler {
     Io(#[from] std::io::Error),
     #[error("TOML parsing error: {0}")]
     Toml(#[from] toml::de::Error),
-    // Extended error types for projects that reference this API.
+    
+    // Extended error types for projects that reference this library.
 
     #[error("Network request failed: {0}")]
     NetworkError(#[from] reqwest::Error),
@@ -167,7 +169,7 @@ impl ErrorHandler {
     ///
     /// # Returns
     /// * `Self`: An `ErrorHandler::ChallengeSolvingError` passed with
-    ///           argument provided to this function.
+    ///           an argument provided to this function.
     #[allow(dead_code)]
     pub fn challenge_solving_error(message: impl Into<String>) -> Self {
         ErrorHandler::ChallengeSolvingError(message.into())
