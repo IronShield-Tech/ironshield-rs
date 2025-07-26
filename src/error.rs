@@ -62,9 +62,10 @@ pub enum ErrorHandler {
     InternalError,
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    #[cfg(feature = "toml")]
     #[error("TOML parsing error: {0}")]
     Toml(#[from] toml::de::Error),
-    
+
     // Extended error types for projects that reference this library.
 
     #[error("Network request failed: {0}")]
@@ -96,7 +97,7 @@ pub enum ErrorHandler {
 }
 
 /// Converts `ErrorHandler` into an `axum::response::Response`.
-/// 
+///
 /// This implementation allows `ErrorHandler` to be used
 /// as a response type in Axum handlers in ironshield-api.
 impl IntoResponse for ErrorHandler {
