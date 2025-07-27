@@ -1,12 +1,11 @@
 use crate::{
-    config::ClientConfig,
+    solve_challenge, 
+    ClientConfig, 
+    IronShieldClient,
+    result::ResultHandler
 };
-use crate::{
-    request::IronShieldClient,
-    solve,
-};
+
 use ironshield_types::IronShieldToken;
-use crate::result::ResultHandler;
 
 /// Fetches a challenge, solves it, and submits the solution for validation.
 ///
@@ -20,18 +19,13 @@ use crate::result::ResultHandler;
 /// * `ResultHandler<IronShieldToken>`: An `IronShieldToken` if successful,
 ///                                     or an error.
 pub async fn validate_challenge(
-    client: &IronShieldClient,
-    config: &ClientConfig,
-    endpoint: &str,
+    client:          &IronShieldClient,
+    config:          &ClientConfig,
+    endpoint:        &str,
     use_multithread: bool,
 ) -> ResultHandler<IronShieldToken> {
-    // Fetch the challenge.
     let challenge = client.fetch_challenge(endpoint).await?;
-
-    // Solve the challenge.
-    let  solution = solve::solve_challenge(challenge, config, use_multithread, None).await?;
-
-    // Submit the solution for validation.
+    let  solution = solve_challenge(challenge, config, use_multithread, None).await?;
     let     token = client.submit_solution(&solution).await?;
 
     Ok(token)

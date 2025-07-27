@@ -2,13 +2,14 @@ use tokio::task::JoinHandle;
 use futures::future;
 
 use ironshield_types::{IronShieldChallenge, IronShieldChallengeResponse};
+
 use crate::config::ClientConfig;
+use crate::error::ErrorHandler;
+use crate::result::ResultHandler;
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::time::Instant;
 use tokio::time::Duration;
-use crate::error::ErrorHandler;
-use crate::result::ResultHandler;
 
 /// Configuration for proof-of-work challenge
 /// solving.
