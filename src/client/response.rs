@@ -3,8 +3,8 @@ use ironshield_types::{
     IronShieldToken
 };
 
-use crate::error::ErrorHandler;
-use crate::result::ResultHandler;
+use crate::handler::error::ErrorHandler;
+use crate::handler::result::ResultHandler;
 
 use serde_json::Value;
 

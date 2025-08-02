@@ -1,11 +1,10 @@
-use crate::{
-    solve_challenge, 
-    ClientConfig, 
-    IronShieldClient,
-    result::ResultHandler
-};
-
 use ironshield_types::IronShieldToken;
+
+use crate::client::solve::solve_challenge;
+use crate::client::config::ClientConfig;
+use crate::client::request::IronShieldClient;
+
+use crate::handler::result::ResultHandler;
 
 /// Fetches a challenge, solves it, and submits the solution for validation.
 ///

@@ -1,9 +1,8 @@
-use crate::constant::USER_AGENT;
-
-use crate::error::ErrorHandler;
-use crate::result::ResultHandler;
-
 use reqwest::Client;
+
+use crate::constant::USER_AGENT;
+use crate::handler::error::ErrorHandler;
+use crate::handler::result::ResultHandler;
 
 use std::time::Duration;
 
@@ -90,4 +89,4 @@ impl HttpClientBuilder {
             .build()
             .map_err(ErrorHandler::from_network_error)
     }
-} 
+}

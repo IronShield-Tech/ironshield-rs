@@ -6,11 +6,16 @@ use ironshield_types::{
     IronShieldToken,
 };
 
-use crate::config::ClientConfig;
-use crate::error::{ErrorHandler, INVALID_ENDPOINT};
-use crate::http::HttpClientBuilder;
-use crate::response::ApiResponse;
-use crate::result::ResultHandler;
+use crate::client::config::ClientConfig;
+use crate::client::http::HttpClientBuilder;
+use crate::client::response::ApiResponse;
+use crate::handler::{
+    error::{
+        ErrorHandler, 
+        INVALID_ENDPOINT
+    },
+    result::ResultHandler
+};
 
 use reqwest::Client;
 
@@ -30,7 +35,8 @@ impl IronShieldClient {
     ///
     /// # Example
     /// ```no_run
-    /// use ironshield::{ClientConfig, IronShieldClient};
+    /// use ironshield::client::config::ClientConfig;
+    /// use ironshield::client::request::IronShieldClient;
     /// 
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let config = ClientConfig::testing();
@@ -65,8 +71,10 @@ impl IronShieldClient {
     ///
     /// # Examples
     /// ```no_run
-    /// use ironshield::{ClientConfig, IronShieldClient};
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// use ironshield::client::config::ClientConfig;
+    /// use ironshield::client::request::IronShieldClient;
+    ///
+    /// async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// # let config = ClientConfig::default();
     /// # let client = IronShieldClient::new(config)?;
     /// let challenge = client.fetch_challenge("https://example.com/protected").await?;

@@ -1,15 +1,23 @@
 use tokio::task::JoinHandle;
+use tokio::time::Duration;
 use futures::future;
 
-use ironshield_types::{IronShieldChallenge, IronShieldChallengeResponse};
+use ironshield_types::{
+    IronShieldChallenge, 
+    IronShieldChallengeResponse
+};
 
-use crate::config::ClientConfig;
-use crate::error::ErrorHandler;
-use crate::result::ResultHandler;
+use crate::client::config::ClientConfig;
+use crate::handler::error::ErrorHandler;
+use crate::handler::result::ResultHandler;
 
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc, atomic::{
+        AtomicBool, 
+        Ordering
+    }
+};
 use std::time::Instant;
-use tokio::time::Duration;
 
 /// Configuration for proof-of-work challenge
 /// solving.
@@ -56,7 +64,13 @@ impl SolveConfig {
 
 /// Trait for progress callbacks during solving
 pub trait ProgressTracker: Send + Sync {
-    fn on_progress(&self, thread_id: usize, total_attempts: u64, hash_rate: u64, elapsed: std::time::Duration);
+    fn on_progress(
+        &self, 
+        thread_id:      usize, 
+        total_attempts: u64, 
+        hash_rate:      u64, 
+        elapsed:        Duration
+    );
 }
 
 /// Primary entry point for solving proof-of-work challenges.
@@ -195,8 +209,7 @@ async fn wait_for_solution(
             Ok(Ok(found_solution)) => {
                 // Signal all threads to stop progress reporting.
                 solution_found.store(true, Ordering::Relaxed);
-
-                // Abort all remaining handles immediately.
+                
                 for handle in other_handles {
                     handle.abort();
                 }
@@ -204,11 +217,9 @@ async fn wait_for_solution(
                 return Ok(found_solution);
             },
             Ok(Err(_e)) => {
-                // Continue with remaining threads
                 handles = other_handles;
             },
             Err(_e) => {
-                // Continue with remaining threads
                 handles = other_handles;
             }
         }

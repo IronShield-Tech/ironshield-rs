@@ -3,9 +3,12 @@ use serde::{
     Serialize
 };
 
-#[allow(unused_imports)]
-use crate::error::{ErrorHandler, INVALID_ENDPOINT};
 use crate::USER_AGENT;
+
+use crate::handler::error::{
+    ErrorHandler, 
+    INVALID_ENDPOINT
+};
 
 use std::time::Duration;
 
@@ -39,7 +42,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let dev_config = ClientConfig::development();
     /// assert!(dev_config.verbose);
@@ -62,7 +65,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let test_config = ClientConfig::testing();
     /// assert_eq!(test_config.api_base_url, "http://localhost:3000");
@@ -91,7 +94,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let config = ClientConfig::default();
     /// assert!(config.validate().is_ok());
@@ -147,7 +150,7 @@ impl ClientConfig {
     /// # Examples
     /// ```
     /// // Load from the default location.
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     /// 
     /// let config = ClientConfig::from_file("ironshield.toml")?;
     ///
@@ -191,7 +194,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let config = ClientConfig::default();
     /// config.save_to_file("ironshield.toml")?;
@@ -220,7 +223,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let mut config = ClientConfig::default();
     /// config.set_api_base_url("https://custom-api.example.com")?;
@@ -254,7 +257,7 @@ impl ClientConfig {
     /// # Example
     /// ```
     /// use std::time::Duration;
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let mut config = ClientConfig::default();
     /// config.set_timeout(Duration::from_secs(45))?;
@@ -284,7 +287,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let mut config = ClientConfig::default();
     /// config.set_num_threads(Some(4))?;
@@ -312,7 +315,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let mut config = ClientConfig::default();
     /// config.set_verbose(true);
@@ -331,7 +334,7 @@ impl ClientConfig {
     ///
     /// # Example
     /// ```
-    /// use ironshield::ClientConfig;
+    /// use ironshield::client::config::ClientConfig;
     ///
     /// let mut config = ClientConfig::default();
     /// config.set_user_agent("whateva/1.0")?;
