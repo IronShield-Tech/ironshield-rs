@@ -47,7 +47,7 @@ impl IronShieldClient {
     pub fn new(config: ClientConfig) -> ResultHandler<Self> {
         if !config.api_base_url.starts_with("https://") {
             return Err(ErrorHandler::config_error(
-                INVALID_ENDPOINT
+                INVALID_ENDPOINT.message
             ));
         }
 

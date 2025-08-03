@@ -12,31 +12,110 @@ use thiserror::Error;
 
 use std::time::Duration;
 
-pub const        CLOCK_SKEW: &str = "Request timestamp does not match the current time";
-pub const  INVALID_ENDPOINT: &str = "Endpoint must be a valid HTTPS URL";
-pub const    INVALID_PARAMS: &str = "Invalid challenge parameters";
-pub const  INVALID_SOLUTION: &str = "Invalid solution provided for the challenge";
-pub const  MAX_TIME_DIFF_MS:  i64 = 3 * 10000; // 3 * 10,000 milliseconds = 30 seconds
-pub const      PUB_KEY_FAIL: &str = "Failed to load public key";
-pub const      SIG_KEY_FAIL: &str = "Failed to load signing key";
-pub const    SIGNATURE_FAIL: &str = "Signature verification failed";
+/// Error information containing both message and HTTP status code
+#[derive(Debug, Clone)]
+pub struct ErrorInfo {
+    pub message: &'static str,
+    pub status_code: u16,
+}
+
+impl ErrorInfo {
+    /// Get the message as a const function 
+    pub const fn message(&self) -> &'static str {
+        self.message
+    }
+    
+    /// Get the status code as a const function
+    pub const fn status_code(&self) -> u16 {
+        self.status_code
+    }
+}
+
+impl std::fmt::Display for ErrorInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+// HTTP Status Code Constants
+pub const STATUS_OK: u16 = 200;
+pub const STATUS_OK_MSG: &str = "Served response successfully.";
+pub const STATUS_BAD_REQUEST: u16 = 400;
+pub const STATUS_UNAUTHORIZED: u16 = 401;
+pub const STATUS_FORBIDDEN: u16 = 403;
+pub const STATUS_NOT_FOUND: u16 = 404;
+pub const STATUS_GONE: u16 = 410;
+pub const STATUS_UNPROCESSABLE_ENTITY: u16 = 422;
+pub const STATUS_INTERNAL_SERVER_ERROR: u16 = 500;
+
+// Error message constants (for utoipa descriptions)
+pub const CLOCK_SKEW_MSG: &str = "Request timestamp does not match the current time";
+pub const INVALID_ENDPOINT_MSG: &str = "Endpoint must be a valid HTTPS URL";
+pub const INVALID_PARAMS_MSG: &str = "Invalid challenge parameters";
+pub const INVALID_SOLUTION_MSG: &str = "Invalid solution provided for the challenge";
+pub const CHALLENGE_EXPIRED_MSG: &str = "Challenge has expired";
+pub const PUB_KEY_FAIL_MSG: &str = "Failed to load public key";
+pub const SIG_KEY_FAIL_MSG: &str = "Failed to load signing key";
+pub const SIGNATURE_FAIL_MSG: &str = "Signature verification failed";
+
+// Error definitions with semantically correct status codes
+pub const CLOCK_SKEW: ErrorInfo = ErrorInfo {
+    message: CLOCK_SKEW_MSG,
+    status_code: STATUS_BAD_REQUEST,
+};
+
+pub const INVALID_ENDPOINT: ErrorInfo = ErrorInfo {
+    message: INVALID_ENDPOINT_MSG,
+    status_code: STATUS_UNPROCESSABLE_ENTITY, // 422 - valid format, semantic error
+};
+
+pub const INVALID_PARAMS: ErrorInfo = ErrorInfo {
+    message: INVALID_PARAMS_MSG,
+    status_code: STATUS_BAD_REQUEST, // 400 - malformed parameters
+};
+
+pub const INVALID_SOLUTION: ErrorInfo = ErrorInfo {
+    message: INVALID_SOLUTION_MSG,
+    status_code: STATUS_UNPROCESSABLE_ENTITY, // 422 - wrong solution
+};
+
+pub const CHALLENGE_EXPIRED: ErrorInfo = ErrorInfo {
+    message: CHALLENGE_EXPIRED_MSG,
+    status_code: STATUS_GONE, // 410 Gone - resource no longer available
+};
+
+pub const PUB_KEY_FAIL: ErrorInfo = ErrorInfo {
+    message: PUB_KEY_FAIL_MSG,
+    status_code: STATUS_INTERNAL_SERVER_ERROR, // 500 - server configuration issue
+};
+
+pub const SIG_KEY_FAIL: ErrorInfo = ErrorInfo {
+    message: SIG_KEY_FAIL_MSG,
+    status_code: STATUS_INTERNAL_SERVER_ERROR, // 500 - server configuration issue
+};
+
+pub const SIGNATURE_FAIL: ErrorInfo = ErrorInfo {
+    message: SIGNATURE_FAIL_MSG,
+    status_code: STATUS_UNPROCESSABLE_ENTITY, // 422 - invalid signature
+};
+
+// Backwards compatibility - keep the simple message constants for now
+pub const MAX_TIME_DIFF_MS: i64 = 3 * 10000; // 3 * 10,000 milliseconds = 30 seconds
 
 #[allow(dead_code)]
-pub const CHALLENGE_EXPIRED: &str = "Challenge has expired";
+pub const CONFIG_ERROR: &str = "Invalid configuration";
 
 #[allow(dead_code)]
-pub const      CONFIG_ERROR: &str = "Invalid configuration";
+pub const MAX_ITERATIONS: &str = "Maximum solving iterations reached without finding solution";
 
 #[allow(dead_code)]
-pub const    MAX_ITERATIONS: &str = "Maximum solving iterations reached without finding solution";
+pub const NETWORK_ERROR: &str = "Network request failed";
 
 #[allow(dead_code)]
-pub const     NETWORK_ERROR: &str = "Network request failed";
-
-#[allow(dead_code)]
-pub const     TIMEOUT_ERROR: &str = "Operation timed out";
+pub const TIMEOUT_ERROR: &str = "Operation timed out";
 
 #[derive(Error, Debug)]
+#[allow(dead_code)]
 pub enum ErrorHandler {
     #[error("API error ({status}): {message}")]
     Api {
@@ -46,23 +125,18 @@ pub enum ErrorHandler {
         message: String
     },
     #[error("Authentication failed: {0}")]
-    #[allow(dead_code)]
     AuthenticationError(String),
     #[error("Challenge processing error: {0}")]
     Challenge(String),
     #[error("Challenge solving failed: {0}")]
-    #[allow(dead_code)]
     ChallengeSolvingError(String),
     #[error("Challenge verification failed: {0}")]
-    #[allow(dead_code)]
     ChallengeVerificationError(String),
     #[error("Configuration error: {0}")]
     Config(String),
     #[error("Configuration error: {0}")]
-    #[allow(dead_code)]
     ConfigurationError(String),
     #[error("Internal server error")]
-    #[allow(dead_code)]
     InternalError,
     #[error("Invalid request format: {0}")]
     InvalidRequest(String),
@@ -71,20 +145,16 @@ pub enum ErrorHandler {
     #[error("Network request failed: {0}")]
     NetworkError(#[from] reqwest::Error),
     #[error("Resource not found: {0}")]
-    #[allow(dead_code)]
     NotFoundError(String),
     #[error("Permission denied: {0}")]
-    #[allow(dead_code)]
     PermissionError(String),
     #[error("Processing failed: {0}")]
     ProcessingError(String),
     #[error("Rate limit exceeded: {0}")]
-    #[allow(dead_code)]
     RateLimitError(String),
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
     #[error("Operation timed out after {duration:?}")]
-    #[allow(dead_code)]
     TimeoutError { duration: Duration },
     #[cfg(feature = "toml")]
     #[error("TOML parsing error: {0}")]
@@ -124,6 +194,7 @@ impl IntoResponse for ErrorHandler {
     }
 }
 
+#[allow(dead_code)]
 impl ErrorHandler {
     /// # Arguments
     /// * `status`:  The HTTP status code from the API
@@ -147,7 +218,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::AuthenticationError` passed with
     ///           the argument provided to this function.
-    #[allow(dead_code)]
     pub fn authentication_error(
         message: impl Into<String>
     ) -> Self {
@@ -173,7 +243,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::ChallengeSolvingError` passed with
     ///           an argument provided to this function.
-    #[allow(dead_code)]
     pub fn challenge_solving_error(
         message: impl Into<String>
     ) -> Self {
@@ -187,7 +256,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::ChallengeVerificationError` passed
     ///           with the argument provided to this function.
-    #[allow(dead_code)]
     pub fn challenge_verification_error(
         message: impl Into<String>
     ) -> Self {
@@ -201,7 +269,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::ConfigurationError` passed
     ///           with the argument provided to this function.
-    #[allow(dead_code)]
     pub fn config_error(
         message: impl Into<String>
     ) -> Self {
@@ -214,7 +281,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::NetworkError` passed with the
     ///           argument provided to this function.
-    #[allow(dead_code)]
     pub fn from_network_error(
         error: reqwest::Error
     ) -> Self {
@@ -228,7 +294,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::NotFoundError` passed with
     ///           the argument provided to this function.
-    #[allow(dead_code)]
     pub fn not_found_error(
         message: impl Into<String>
     ) -> Self {
@@ -242,7 +307,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::PermissionError` passed with
     ///           the argument provided to this function.
-    #[allow(dead_code)]
     pub fn permission_error(
         message: impl Into<String>
     ) -> Self {
@@ -256,7 +320,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::RateLimitError` passed with
     ///           the argument provided to this function.
-    #[allow(dead_code)]
     pub fn rate_limit_error(
         message: impl Into<String>
     ) -> Self {
@@ -269,7 +332,6 @@ impl ErrorHandler {
     /// # Returns
     /// * `Self`: An `ErrorHandler::TimeoutError` passed with the
     ///           argument provided to this function.
-    #[allow(dead_code)]
     pub fn timeout(
         duration: Duration
     ) -> Self {
