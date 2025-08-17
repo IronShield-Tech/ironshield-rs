@@ -99,8 +99,8 @@ pub const SIGNATURE_FAIL: ErrorInfo = ErrorInfo {
     status_code: STATUS_UNPROCESSABLE_ENTITY, // 422 - invalid signature
 };
 
-// Backwards compatibility - keep the simple message constants for now
-pub const MAX_TIME_DIFF_MS: i64 = 3 * 10000; // 3 * 10,000 milliseconds = 30 seconds
+// Allow for 5 minutes of clock skew
+pub const MAX_TIME_DIFF_MS: i64 = 300_000;
 
 #[allow(dead_code)]
 pub const CONFIG_ERROR: &str = "Invalid configuration";
