@@ -864,7 +864,7 @@ dependencies = [
 
 [[package]]
 name = "ironshield"
-version = "0.2.19"
+version = "0.2.20"
 dependencies = [
  "axum",
  "futures",
@@ -883,9 +883,7 @@ dependencies = [
 
 [[package]]
 name = "ironshield-core"
-version = "0.3.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2391996219aa88ce9855efba0616269ef61c5e9f45c4ec40e764ab6dff45fb27"
+version = "0.3.16"
 dependencies = [
  "base64",
  "chrono",
@@ -902,9 +900,7 @@ dependencies = [
 
 [[package]]
 name = "ironshield-types"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d44b64ce71d0380de20b360b0400014f970b2cca58ac8b5b959242c3f26ed42b"
+version = "0.2.9"
 dependencies = [
  "base64",
  "chrono",
