@@ -16,8 +16,8 @@ parallel = ["ironshield-core/parallel"]
 toml = ["dep:toml"]
 
 [dependencies]
-ironshield-core = { version = "0.3", features = ["parallel"] }
-ironshield-types = { version = "0.2" }
+ironshield-core = { version = "0.3", path = "../ironshield-core", features = ["parallel"] }
+ironshield-types = { version = "0.2", path = "../ironshield-types" }
 futures = "0.3.31"
 tokio = { version = "1.40.0", features = ["full"] }
 reqwest = { version = "0.12.22", features = ["json"] }

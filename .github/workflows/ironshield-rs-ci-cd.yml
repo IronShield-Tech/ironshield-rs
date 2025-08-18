@@ -35,6 +35,16 @@ jobs:
           components: clippy
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
+      
+      # Strip path dependencies for CI (use only version dependencies)
+      - name: Prepare Cargo.toml for CI
+        shell: bash
+        run: |
+          # Remove path dependencies, keeping only version dependencies
+          sed -i 's/, path = "[^"]*"//g' Cargo.toml
+          echo "Modified Cargo.toml for CI:"
+          cat Cargo.toml
+      
       - name: Run clippy action
         uses: clechasseur/rs-clippy-check@v4
   doc:
@@ -49,6 +59,16 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
+      
+      # Strip path dependencies for CI (use only version dependencies)
+      - name: Prepare Cargo.toml for CI
+        shell: bash
+        run: |
+          # Remove path dependencies, keeping only version dependencies
+          sed -i 's/, path = "[^"]*"//g' Cargo.toml
+          echo "Modified Cargo.toml for CI:"
+          cat Cargo.toml
+      
       - name: Run cargo doc
         run: cargo doc --no-deps --all-features
         env:
@@ -67,6 +87,21 @@ jobs:
 
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
+
+      # Strip path dependencies for CI (use only version dependencies)
+      - name: Prepare Cargo.toml for CI
+        shell: bash
+        run: |
+          # Remove path dependencies, keeping only version dependencies
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS (BSD sed) requires empty extension parameter
+            sed -i '' 's/, path = "[^"]*"//g' Cargo.toml
+          else
+            # Linux (GNU sed) uses different syntax
+            sed -i 's/, path = "[^"]*"//g' Cargo.toml
+          fi
+          echo "Modified Cargo.toml for CI:"
+          cat Cargo.toml
 
       - name: Cargo test all features
         run: cargo test --all-features --all-targets
@@ -143,21 +178,23 @@ jobs:
           git commit -m "chore: bump version to ${{ env.NEW_VERSION }} [skip ci]"
           git push origin main
 
-      # Build and verify the package before publishing
-      - name: Build Package
-        run: |
-          echo "Building package v${{ env.NEW_VERSION }}..."
-          cargo build --release
-          echo "Build completed successfully!"
-
       # Create and push a tag 
       - name: Create Git Tag
         run: |
           git tag "v${{ env.NEW_VERSION }}"
           git push origin "v${{ env.NEW_VERSION }}"
+      
+      # Strip path dependencies for CI (use only version dependencies)
+      - name: Prepare Cargo.toml for CI
+        shell: bash
+        run: |
+          # Remove path dependencies, keeping only version dependencies
+          sed -i 's/, path = "[^"]*"//g' Cargo.toml
+          echo "Modified Cargo.toml for CI:"
+          cat Cargo.toml
 
       # Publish to crates.io.
       - name: Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish
+        run: cargo publish --allow-dirty
