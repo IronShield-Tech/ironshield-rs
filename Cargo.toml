@@ -11,12 +11,10 @@ keywords = ["proof-of-work", "pow", "ddos", "crypto", "library"]
 categories = ["cryptography", "algorithms", "concurrency"]
 
 [features]
-default = ["parallel"]
-parallel = ["ironshield-core/parallel"]
 toml = ["dep:toml"]
 
 [dependencies]
-ironshield-core = { version = "0.3", path = "../core", features = ["parallel"] }
+ironshield-core = { version = "0.3", path = "../core" }
 ironshield-types = { version = "0.2", path = "../types" }
 futures = "0.3.31"
 tokio = { version = "1.40.0", features = ["full"] }
