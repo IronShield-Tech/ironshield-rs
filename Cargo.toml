@@ -30,10 +30,11 @@ http = "1.3.1"
 [dev-dependencies]
 tempfile = "3.20.0"
 
-# Aggressive release profile optimized for performance
+
 [profile.release]
-lto = true               # Link Time Optimization - enables cross-crate inlining
-opt-level = 3            # Optimize for maximum performance
-strip = true             # Strip debug symbols for smaller binary
-codegen-units = 1        # Single codegen unit for maximum optimization opportunities
-panic = "abort"          # Aborting instead of unwinding results in a much smaller and performant binary
+# Aggressive release profile optimized for performance
+lto = true              
+opt-level = 3           
+strip = true            
+codegen-units = 1       
+panic = "abort"         
